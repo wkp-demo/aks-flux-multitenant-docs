@@ -30,7 +30,7 @@ We will be using Flux2 to manage our platform and applications using the GitOps 
 * **[aks-flux-multitenant-platform](https://github.com/wkp-demo/aks-flux-multitenant-platform)**: The repository managed by the platform team. This repository contains the manifests necessary to configure the Kubernetes cluster with the required namespaces, roles, policies and other resources to guarantee application isolation and compliance.
 * **[aks-flux-multitenant-app1](https://github.com/wkp-demo/aks-flux-multitenant-app1) and [aks-flux-multitenant-app2](https://github.com/wkp-demo/aks-flux-multitenant-app2)**: Each repo holds a sample application, and would be managed by an independent _application team_. The application in these repos will be deployed to the platform managed by the _platform team_.
 
-For details in the contents of each repository see [repository content walkthrough](#repository-content-walkthroguh)
+For details in the contents of each repository see [repository content walkthrough](#repository-content-walkthrough)
 
 ## Preparation (Optional)
 
