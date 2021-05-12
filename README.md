@@ -17,8 +17,10 @@ We will be using Flux2 to manage our platform and applications using the GitOps 
 - One Azure Subscription with the permissions and credits as required to start an AKS service
 - One Resource Group with one AKS Cluster
 - The Flux CLI
-- A GitHub Account for forking the necessary repositories and a configured Personal Access Token
+- A GitHub Account for forking the necessary repositories and a configured Personal Access Token.
 - A git client and basic git understanding
+
+> Note: The only required PAT scope is `repo`
 
 ## The architecture
 
@@ -204,8 +206,43 @@ You will need to fork both application team repositories, and update the URL to 
         └── policies.yaml
 ```
 
-## Repository Content Walkthrough
+## Repository Content Walk-through
 
 ### Platform Repo
 
+#### Platform Components
+
+The `aks-flux-multitenant-platform` repository is owned by the Platform team and holds the state of the core platform components as well as the declaration of the tenants allowed to deploy workloads in any given cluster.
+
+Multiple clusters can be declared inside a single repo, as long as they are stored in different paths, as well as multiple clusters can point to the same state given they're configured to track identical path.
+
+> Only the platform team requires any type of access rights to the platform repo, application teams require no access whatsoever.
+
+In our example, we are storing our cluster state inside the `clusters/production` path.
+
+In that path you will find the following manifests:
+
+* **ingress-release.yaml** and **ingress-repository.yaml**: For our example we are deploying the Nginx Ingress Controller using Helm. In these two manifests you will find a `HelmRepository` and a `HelmRelease`, which effectively make the `nginx-stable` Helm repo available to Flux and installs the `nginx-ingress` chart.
+  
+* **namespace.yaml**: We will install all platform components inside a specific namespace, aptly called `platform`, which is declared in this manifest.
+
+There is also a `clusters/production/kyverno` directory which installs Kyverno and various policies by using a `Kustomization`. The manifests required to install Kyverno and applicable policies are placed at the root of the repository inside a subdirectory, outside any one specific `clusters` path, so that they can be referenced and used across multiple clusters.
+
+#### Tenants
+
+Each cluster should have a `tenants` directory, and inside it each tenant should get a subdirectory of their own. It would be ideal to follow a convention in which there is consistency across directory names, team names and namespaces. In our scenario as an example, we are using `app1` and `app2` as sample team names, which are consistent with the suffix used in each application specific repository, used as namespace and for tenants directory name.
+
+Each tenant holds pretty much identical resources:
+
+* **kustomization.yaml**: This file wraps all other manifests required for every specific tenant.
+* **namespace.yaml**: Creates a namespace for the tenant.
+* **rbac.yaml**: Creates a `ServiceAccount`, `Role` and `RoleBinding` for the application team. These resources provide access to the tenant to perform actions only within their own namespace.
+* **tenant-application.yaml** and **tenant-repository.yaml**: These resources assign a `GitRepository` for each tenant, and by using a `Kustomization` define the convention to sync up anything in `deployment/production` inside the tenant's application repo with the cluster. Note that the `ServiceAccount` created above is used for `serviceAccountName` in the `Kustomization` so that Flux will isolate that which is synced through that resource to the namespace assigned to the tenant.
+
 ### Application Repos
+
+In our scenario each tenant uses a single repository. In practice tenants may have multiple repos, which would require multiple `GitRepository` and `Kustomization` objects to exist in the tenant subdirectory in the platform repo.
+
+All application team repos will be different, depending on the stack they're working with and the architecture of their application, what is most important is that, any manifest placed inside `deployment/production` will be synced up by Flux inside the namespace assigned to the tenant.
+
+In our example, you can find two types of application installs, `app1` uses a `HelmRepository` and `HelmRelease` to install `podinfo`, whereas `app2` includes standard Kubernetes manifests by themselves.
