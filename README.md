@@ -156,33 +156,53 @@ replicaset.apps/notification-controller-5c4d48f476   1         1         1      
 replicaset.apps/source-controller-b4b88948f          1         1         1       2m
 ```
 
-### 2. Onboard each application team (aka. tenant)
+### 2. Installing global platform components
 
-#### Create a base directory for all tenants
+The `production/platform` path in the repo includes components required for platform-wide operation, such as an ingress controller and Kyverno for runtime policy enforcement.
+
+Kyverno and kyverno policies can be used across multiple clusters, therefore, they are referenced by a `Kustomization` pointing to manifests that live outside the `clusters/production` path.
+
+Kyverno policies will require the use of a service account for each tenant, and 
+
+### 3. On-boarding tenants
+
+All tenants are placed inside a `tenants/` subdirectory inside the applicable cluster, in our case, all tenants can be found inside `clusters/production/tenants`.
+
+Each tenant will get a specific `Namespace` and a `ServiceAccount` with permissions inside that namespace only. One `GitRepository` will be added for each tenant, by convention, tenants will need to place inside `deployment/production` anything they want to have deployed onto their specific namespace.
+
+You will need to fork both application team repositories, and update the URL to match your fork in the `GitRepository` object declared in `tenant-repository.yaml` for each tenant.
 
 ```
-|-- clusters
-    |-- production
-        |-- tenants
-            |-- base
-            |   |- namespace.yaml
-            |   |- rbac.yaml
-            |   |- repository.yaml
-            |-- app1
-            |-- app2
-   
+.
+├── README.md
+├── clusters
+│   └── production
+│       ├── platform
+│       │   ├── ingress-release.yaml
+│       │   ├── ingress-repository.yaml
+│       │   ├── kyverno
+│       │   │   └── kyverno.yaml
+│       │   └── namespace.yaml
+│       └── tenants
+│           ├── app1
+│           │   ├── kustomization.yaml
+│           │   ├── namespace.yaml
+│           │   ├── rbac.yaml
+│           │   ├── tenant-application.yaml
+│           │   └── tenant-repository.yaml
+│           ├── app2
+│           │   ├── kustomization.yaml
+│           │   ├── namespace.yaml
+│           │   ├── rbac.yaml
+│           │   ├── tenant-application.yaml
+│           │   └── tenant-repository.yaml
+│           └── common
+└── kyverno
+    ├── core
+    │   └── install.yaml
+    └── policies
+        └── policies.yaml
 ```
-
-#### Declare the common objects required across all tenants
-
-Each tenant will need a namespace, a service account, a cluster role, a Git repository and a Kustomization, we will define by convention the path in which Tenants will have to add their kustomization.yaml files and other manifests for them to be synced up against their namespace.
-
-We will validate via policy that any resource being created by a tenant's kustomizations is created inside their namespace. We will also define network policies that deny traffic between tenant namespaces.
-
-#### Create a directory for each tenant, create a kustomize overlay for each tenant patching base
-
-Our base defines the common structure that will be applied across all tenants, but for each tenant we will need to define some specific attributes, such as name and repository URI. We will use kustomize overlays to override and/or define these custom tenant values without having to duplicate full manifests.
-
 
 ## Repository Content Walkthrough
 
