@@ -160,9 +160,9 @@ replicaset.apps/source-controller-b4b88948f          1         1         1      
 
 ### 2. Installing global platform components
 
-The `production/platform` path in the repo includes components required for platform-wide operation, such as an ingress controller and Kyverno for runtime policy enforcement.
+The `production/platform` path in the repo includes components required for platform-wide operation, such as an ingress controller and [Kyverno](https://kyverno.io/) for runtime policy enforcement.
 
-Kyverno and kyverno policies can be used across multiple clusters, therefore, they are referenced by a `Kustomization` pointing to manifests that live outside the `clusters/production` path.
+Kyverno and [kyverno policies](https://kyverno.io/policies/) can be used across multiple clusters, therefore, they are referenced by a `Kustomization` pointing to manifests that live outside the `clusters/production` path.
 
 Kyverno policies will require the use of a service account for each tenant, and 
 
