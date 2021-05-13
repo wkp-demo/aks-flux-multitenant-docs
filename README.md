@@ -10,7 +10,7 @@ In this iteration we will be walking through a common enterprise scenario. One _
 
 **The Application Teams (Tenants)** are interested in autonomy and velocity, they want to be able to be onboarded onto the platform quickly and with little effort, while transparently applying to the necessary guidelines as defined by the platform team.
 
-We will be using Flux2 to manage our platform and applications using the GitOps operating model, and Kubernetes namespaces and policies to isolate and secure multiple applications (tenants) running on our cluster.
+The original version of Flux did not allow for syncing of multiple repositories.  We will be using Flux2 to manage our platform and applications using the GitOps operating model, and Kubernetes namespaces and policies to isolate and secure multiple applications (tenants) running on our cluster. 
 
 ## What you'll need
 
